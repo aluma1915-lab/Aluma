@@ -15,8 +15,19 @@
   // actualizar Code.gs para que entienda estas llamadas de API.
   var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxNehJ3DC5k8hfvgKas3mExKkz_xe-X9llOVSrQbYm0oBp_n7YsEDyaAGqLbiNHPIZr/exec';
 
-  var contadorJSONP = 0;
   function llamarApiLectura(accion, onExito, onError) {
+    fetch(EXEC_URL + '?api=' + encodeURIComponent(accion))
+      .then(function (r) { return r.json(); })
+      .then(onExito)
+      .catch(function () {
+        // Si fetch falla (por ejemplo, por una restricción de CORS),
+        // reintentamos automáticamente con JSONP como respaldo.
+        llamarApiLecturaJSONP(accion, onExito, onError);
+      });
+  }
+
+  var contadorJSONP = 0;
+  function llamarApiLecturaJSONP(accion, onExito, onError) {
     var nombreCallback = 'alumaCallback' + (contadorJSONP++);
     var script = document.createElement('script');
 
