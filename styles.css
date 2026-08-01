@@ -434,14 +434,31 @@
     .btn-menu-movil{ display:block; }
     .grid-instagram{ grid-template-columns: repeat(3,1fr); }
     .hero-texto{ padding: 0 30px; }
+    .seccion{ padding: 60px 0; }
+    .hero{ height: 72vh; min-height: 460px; }
+    .intro-seccion{ margin-bottom: 32px; }
   }
   @media (max-width: 560px){
-    .seccion{ padding: 56px 0; }
+    .seccion{ padding: 42px 0; }
+    .hero{ height: 62vh; min-height: 400px; }
+    .titulo-seccion{ font-size: 28px; }
+    .subtitulo-seccion{ margin-bottom:6px; }
+    .intro-seccion{ margin-bottom: 26px; }
     .grid-footer{ grid-template-columns: 1fr; }
     .panel-lateral{ width:100%; }
     .flotante{ width:50px; height:50px; font-size:22px; right:16px; }
     .flotante-whatsapp{ bottom:16px; }
     .flotante-arriba{ bottom:76px; }
+    .grid-productos{ gap:24px 16px; }
+    .tarjeta-categoria{ height:200px; }
+    .grid-categorias{ gap:14px; }
+    .filtros-barra{ gap:8px; margin-bottom:28px; }
+    .chip-filtro{ padding:7px 14px; }
+    .grid-resenas{ gap:16px; }
+    .tarjeta-resena{ padding:20px; }
+    .bloque-newsletter{ padding: 50px 24px; }
+    .modal-info{ padding: 20px 24px 32px; }
+    .fila-botones{ flex-direction:column; }
   }
 
   /* Menú móvil desplegable */
