@@ -918,7 +918,7 @@
   }
 
   var TEXTOS_POLITICA = {
-    cambios: ['Política de cambios', 'Aceptamos cambios dentro de los primeros 5 días después de recibido el pedido, siempre que el producto esté sin uso y en su empaque original. Escríbenos por WhatsApp para coordinar tu cambio.'],
+    cambios: ['Política de cambios', 'En ALUMA queremos garantizar la mejor experiencia con tus accesorios. Los cambios aplican únicamente por detalles de fabricación reportados dentro de los primeros 5 días. No realizamos cambios por daños ocasionados por uso inadecuado, golpes, caídas, piezas partidas, pérdida de piedras, manipulación del producto o desgaste natural del accesorio. Recomendamos seguir nuestras indicaciones de cuidado para conservar tus piezas en perfecto estado.'],
     privacidad: ['Política de privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros.'],
     terminos: ['Términos y condiciones', 'Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
     faq: ['Preguntas frecuentes', '¿Cómo pago? Por transferencia o efectivo contra entrega en las ciudades disponibles.<br><br>¿Hacen envíos nacionales? Sí, a toda Colombia.<br><br>¿Cuánto tarda mi pedido? Te lo confirmamos por WhatsApp según tu ciudad.']
