@@ -218,6 +218,9 @@
     font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:5px 10px; z-index:2;
   }
   .etiqueta.oferta{ background: var(--color-dorado); }
+  .etiqueta.agotado{ background: #6f6260; }
+  .tarjeta-producto.agotado .imagen-wrap img{ opacity:0.5; filter: grayscale(40%); }
+  .tarjeta-producto.agotado .precios{ opacity:0.5; }
   .fav-btn{
     position:absolute; top:10px; right:10px; z-index:3; background: rgba(255,255,255,0.85);
     width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;

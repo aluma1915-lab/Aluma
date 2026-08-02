@@ -287,17 +287,24 @@
     cont.innerHTML = lista.map(tarjetaProductoHTML).join('');
   }
 
+  function estaAgotado(p) {
+    return !p.disponible || p.stock <= 0;
+  }
+
   function tarjetaProductoHTML(p) {
     var esFav = ESTADO.favoritos.indexOf(p.id) > -1;
+    var agotado = estaAgotado(p);
     var etiqueta = '';
-    if (p.precioAnterior > p.precio) {
+    if (agotado) {
+      etiqueta = '<span class="etiqueta agotado">Agotado</span>';
+    } else if (p.precioAnterior > p.precio) {
       var descuento = Math.round((1 - p.precio / p.precioAnterior) * 100);
       etiqueta = '<span class="etiqueta oferta">-' + descuento + '%</span>';
     } else if (p.nuevo) {
       etiqueta = '<span class="etiqueta">Nuevo</span>';
     }
     return (
-      '<div class="tarjeta-producto fade-in visible">' +
+      '<div class="tarjeta-producto fade-in visible' + (agotado ? ' agotado' : '') + '">' +
         '<div class="imagen-wrap" onclick="abrirProducto(\'' + p.id + '\')">' +
           etiqueta +
           '<button class="fav-btn ' + (esFav ? 'activo' : '') + '" onclick="event.stopPropagation(); alternarFavorito(\'' + p.id + '\')">' + iconoCorazon() + '</button>' +
@@ -349,6 +356,7 @@
     ESTADO.productoActual = p;
     ESTADO.colorSeleccionado = p.colores[0] || '';
     ESTADO.cantidadSeleccionada = 1;
+    var agotado = estaAgotado(p);
 
     var galeria = (p.galeria.length ? p.galeria : [p.imagen]).map(urlImagen);
 
@@ -376,15 +384,16 @@
           '</div>' +
           '<p class="descripcion">' + escapeHTML(p.descripcion) + '</p>' +
           (p.colores.length ? '<p class="selector-titulo">Color: <span id="texto-color-elegido">' + escapeHTML(p.colores[0]) + '</span></p><div class="selector-colores">' + htmlColores + '</div>' : '') +
+          (!agotado && p.stock <= 5 ? '<p style="font-size:12px; color:#a13a2f; margin-top:10px;">¡Solo quedan ' + p.stock + ' unidades!</p>' : '') +
           '<p class="selector-titulo">Cantidad</p>' +
           '<div class="selector-cantidad">' +
-            '<button onclick="cambiarCantidad(-1)">-</button>' +
-            '<span id="cantidad-modal">1</span>' +
-            '<button onclick="cambiarCantidad(1)">+</button>' +
+            '<button onclick="cambiarCantidad(-1)" ' + (agotado ? 'disabled' : '') + '>-</button>' +
+            '<span id="cantidad-modal">' + (agotado ? 0 : 1) + '</span>' +
+            '<button onclick="cambiarCantidad(1)" ' + (agotado ? 'disabled' : '') + '>+</button>' +
           '</div>' +
           '<div class="fila-botones">' +
-            '<button class="btn btn-primario" onclick="agregarAlCarritoDesdeModal()" ' + (p.disponible ? '' : 'disabled') + '>' + (p.disponible ? 'Agregar al carrito' : 'Agotado') + '</button>' +
-            '<button class="btn btn-dorado" onclick="comprarAhora()" ' + (p.disponible ? '' : 'disabled') + '>Comprar</button>' +
+            '<button class="btn btn-primario" onclick="agregarAlCarritoDesdeModal()" ' + (agotado ? 'disabled' : '') + '>' + (agotado ? 'Agotado' : 'Agregar al carrito') + '</button>' +
+            '<button class="btn btn-dorado" onclick="comprarAhora()" ' + (agotado ? 'disabled' : '') + '>Comprar</button>' +
           '</div>' +
           '<div class="fila-secundaria">' +
             '<button onclick="alternarFavorito(\'' + p.id + '\'); actualizarBotonFavModal();" id="btn-fav-modal">' + iconoCorazon() + ' Favoritos</button>' +
@@ -461,7 +470,13 @@
   }
 
   function cambiarCantidad(delta) {
-    ESTADO.cantidadSeleccionada = Math.max(1, ESTADO.cantidadSeleccionada + delta);
+    var stockMax = ESTADO.productoActual ? ESTADO.productoActual.stock : 99;
+    var nueva = ESTADO.cantidadSeleccionada + delta;
+    if (nueva > stockMax) {
+      mostrarToast('Solo hay ' + stockMax + ' unidades disponibles');
+      nueva = stockMax;
+    }
+    ESTADO.cantidadSeleccionada = Math.max(1, nueva);
     document.getElementById('cantidad-modal').textContent = ESTADO.cantidadSeleccionada;
   }
 
@@ -548,12 +563,21 @@
   function agregarAlCarrito(p, color, cantidad) {
     var idLinea = p.id + '|' + color;
     var existente = ESTADO.carrito.filter(function (l) { return l.idLinea === idLinea; })[0];
+    var cantidadActual = existente ? existente.cantidad : 0;
+    var cantidadFinal = cantidadActual + cantidad;
+
+    if (cantidadFinal > p.stock) {
+      cantidadFinal = p.stock;
+      mostrarToast('Ajustamos la cantidad: solo hay ' + p.stock + ' unidades de "' + p.nombre + '"');
+    }
+    if (cantidadFinal <= 0) return;
+
     if (existente) {
-      existente.cantidad += cantidad;
+      existente.cantidad = cantidadFinal;
     } else {
       ESTADO.carrito.push({
         idLinea: idLinea, id: p.id, nombre: p.nombre, precio: p.precio,
-        color: color, imagen: urlImagen(p.imagen), cantidad: cantidad
+        color: color, imagen: urlImagen(p.imagen), cantidad: cantidadFinal
       });
     }
     guardarCarrito();
@@ -568,6 +592,16 @@
   function cambiarCantidadCarrito(idLinea, delta) {
     var linea = ESTADO.carrito.filter(function (l) { return l.idLinea === idLinea; })[0];
     if (!linea) return;
+
+    if (delta > 0) {
+      var producto = ESTADO.productos.filter(function (p) { return p.id === linea.id; })[0];
+      var stockMax = producto ? producto.stock : 99;
+      if (linea.cantidad + delta > stockMax) {
+        mostrarToast('Solo hay ' + stockMax + ' unidades disponibles');
+        return;
+      }
+    }
+
     linea.cantidad += delta;
     if (linea.cantidad <= 0) {
       ESTADO.carrito = ESTADO.carrito.filter(function (l) { return l.idLinea !== idLinea; });
