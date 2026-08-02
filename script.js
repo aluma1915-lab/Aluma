@@ -1,4 +1,4 @@
-  /* =========================================================
+/* =========================================================
      ALUMA — LÓGICA DE CLIENTE
      ========================================================= */
 
@@ -170,11 +170,11 @@
     if (!url) return '';
     url = String(url).trim();
     var match = url.match(/drive\.google\.com\/file\/d\/([-\w]{20,})/);
-    if (match) return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1000';
+    if (match) return 'https://lh3.googleusercontent.com/d/' + match[1] + '=w1000';
     match = url.match(/drive\.google\.com\/open\?id=([-\w]{20,})/);
-    if (match) return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1000';
+    if (match) return 'https://lh3.googleusercontent.com/d/' + match[1] + '=w1000';
     match = url.match(/[?&]id=([-\w]{20,})/);
-    if (match && url.indexOf('drive.google.com') > -1) return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1000';
+    if (match && url.indexOf('drive.google.com') > -1) return 'https://lh3.googleusercontent.com/d/' + match[1] + '=w1000';
     return url;
   }
 
