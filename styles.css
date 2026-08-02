@@ -62,6 +62,8 @@
     text-align:center;
     color: var(--color-principal);
     letter-spacing: 0.5px;
+    word-break: break-word;
+    padding: 0 16px;
   }
   .subtitulo-seccion{
     text-align:center;
