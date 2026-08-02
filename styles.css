@@ -1,4 +1,4 @@
-  /* ===================================================================
+ /* ===================================================================
      ALUMA — ESTILOS
      Nota sobre tipografía: "Chloe" es una fuente de licencia comercial y
      no está disponible en Google Fonts para cargarla por URL. Si tienes
@@ -452,9 +452,18 @@
     .flotante{ width:50px; height:50px; font-size:22px; right:16px; }
     .flotante-whatsapp{ bottom:16px; }
     .flotante-arriba{ bottom:76px; }
-    .grid-productos{ gap:24px 16px; }
-    .tarjeta-categoria{ height:200px; }
-    .grid-categorias{ gap:14px; }
+    .grid-productos{ gap:16px 10px; grid-template-columns: repeat(3, 1fr); }
+    .tarjeta-producto .info-producto{ padding-top:8px; }
+    .info-producto h3{ font-size:15px; }
+    .precio-actual{ font-size:13px; }
+    .precio-anterior{ font-size:11px; }
+    .info-producto .cat{ font-size:9px; }
+    .etiqueta{ font-size:8px; padding:3px 7px; top:8px; left:8px; }
+    .fav-btn{ width:26px; height:26px; top:8px; right:8px; }
+    .fav-btn .icono-corazon{ width:13px; height:13px; }
+    .grid-categorias{ gap:10px; grid-template-columns: repeat(2, 1fr); }
+    .tarjeta-categoria{ height:150px; }
+    .tarjeta-categoria span{ font-size:16px; bottom:12px; left:12px; }
     .filtros-barra{ gap:8px; margin-bottom:28px; }
     .chip-filtro{ padding:7px 14px; }
     .grid-resenas{ gap:16px; }
