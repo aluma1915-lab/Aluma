@@ -889,10 +889,17 @@
     });
   }
 
+  function nombreUsuarioDesdeURL(url) {
+    if (!url) return '';
+    var limpio = String(url).split('?')[0].split('#')[0].replace(/\/+$/, '');
+    var partes = limpio.split('/').filter(Boolean);
+    return partes.pop() || '';
+  }
+
   function renderInstagram() {
     var cont = document.getElementById('grid-instagram');
     var imagenes = ESTADO.productos.slice(0, 6).map(function (p) { return urlImagen(p.imagen); });
-    if (ESTADO.config.InstagramURL) document.getElementById('titulo-instagram').textContent = '@' + ESTADO.config.InstagramURL.split('/').filter(Boolean).pop();
+    if (ESTADO.config.InstagramURL) document.getElementById('titulo-instagram').textContent = '@' + nombreUsuarioDesdeURL(ESTADO.config.InstagramURL);
     cont.innerHTML = imagenes.map(function (img) {
       return '<a href="' + (ESTADO.config.InstagramURL || '#') + '" target="_blank"><img src="' + img + '" loading="lazy"></a>';
     }).join('');
