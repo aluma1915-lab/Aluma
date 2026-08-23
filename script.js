@@ -13,7 +13,7 @@
   // ⚠️ IMPORTANTE: reemplaza esto por el link real de tu Web App de Apps Script
   // (el que termina en /exec). Debes volver a implementarla después de
   // actualizar Code.gs para que entienda estas llamadas de API.
-  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxNehJ3DC5k8hfvgKas3mExKkz_xe-X9llOVSrQbYm0oBp_n7YsEDyaAGqLbiNHPIZr/exec';
+  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxn5cvS94r4qGhpFgq-BNVQAIUPmgkoLDrZppP5EUZMruX5vDZDLnXCrH_QsydGTWjO/exec';
 
   function llamarApiLectura(accion, onExito, onError) {
     fetch(EXEC_URL + '?api=' + encodeURIComponent(accion))
@@ -141,8 +141,14 @@
     if (c.InstagramURL) document.getElementById('link-instagram').href = c.InstagramURL;
     if (c.FacebookURL) document.getElementById('link-facebook').href = c.FacebookURL;
     if (c.TikTokURL) document.getElementById('link-tiktok').href = c.TikTokURL;
+    if (c.InstagramURL) document.getElementById('link-instagram-footer').href = c.InstagramURL;
+    if (c.FacebookURL) document.getElementById('link-facebook-footer').href = c.FacebookURL;
+    if (c.TikTokURL) document.getElementById('link-tiktok-footer').href = c.TikTokURL;
     if (c.TextoAnuncio) document.getElementById('barra-anuncio').textContent = c.TextoAnuncio;
     if (c.TextoSobreNosotros) document.getElementById('texto-nosotros').textContent = c.TextoSobreNosotros;
+
+    var imgEsencia = c.ImagenEsencia || (ESTADO.banners[0] && ESTADO.banners[0].imagen) || (ESTADO.productos[0] && ESTADO.productos[0].imagen) || '';
+    if (imgEsencia) document.getElementById('esencia-imagen').style.backgroundImage = "url('" + urlImagen(imgEsencia) + "')";
 
     var numero = obtenerNumeroWhatsApp();
     var enlace = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(
@@ -158,6 +164,32 @@
 
   function formatearPrecio(valor) {
     return '$' + Math.round(valor).toLocaleString('es-CO');
+  }
+
+  /**
+   * Calcula el precio real a mostrar/cobrar de un producto, contemplando dos
+   * formas de marcar oferta (para no romper datos ya existentes):
+   * 1) Las columnas nuevas PrecioOferta + OfertaActiva (recomendado).
+   * 2) La columna anterior PrecioAnterior (si es mayor que Precio).
+   */
+  function precioInfo(p) {
+    if (p.ofertaActiva && p.precioOferta > 0 && p.precioOferta < p.precio) {
+      return {
+        final: p.precioOferta,
+        base: p.precio,
+        activa: true,
+        pct: Math.round((1 - p.precioOferta / p.precio) * 100)
+      };
+    }
+    if (p.precioAnterior > p.precio) {
+      return {
+        final: p.precio,
+        base: p.precioAnterior,
+        activa: true,
+        pct: Math.round((1 - p.precio / p.precioAnterior) * 100)
+      };
+    }
+    return { final: p.precio, base: null, activa: false, pct: 0 };
   }
 
   /**
@@ -187,11 +219,13 @@
     cont.innerHTML = '';
     dots.innerHTML = '';
 
+    var eslogan = ESTADO.config.Eslogan || 'Detalles que hablan de ti.';
+
     var banners = ESTADO.banners.length ? ESTADO.banners : [{
       titulo: ESTADO.config.NombreTienda || 'Aluma',
-      subtitulo: ESTADO.config.Eslogan || 'Accesorios que cuentan tu historia',
+      subtitulo: eslogan,
       imagen: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1600',
-      botonTexto: 'Ver tienda', botonLink: '#tienda'
+      botonTexto: 'Comprar colección', botonLink: '#tienda'
     }];
 
     banners.forEach(function (b, i) {
@@ -200,10 +234,14 @@
       slide.style.backgroundImage = "url('" + urlImagen(b.imagen) + "')";
       slide.innerHTML =
         '<div class="hero-texto">' +
-          '<p class="eyebrow">Colección Aluma</p>' +
-          '<h1>' + escapeHTML(b.titulo) + '</h1>' +
-          '<p>' + escapeHTML(b.subtitulo || '') + '</p>' +
-          '<a href="' + (b.botonLink || '#tienda') + '" class="btn btn-claro">' + escapeHTML(b.botonTexto || 'Ver colección') + '</a>' +
+          '<p class="eyebrow">Aluma</p>' +
+          '<h1>' + escapeHTML(b.titulo || eslogan) + '</h1>' +
+          (b.subtitulo ? '<p class="hero-subtitulo">' + escapeHTML(b.subtitulo) + '</p>' : '') +
+          '<div class="hero-botones">' +
+            '<a href="' + (b.botonLink || '#tienda') + '" class="btn btn-claro">' + escapeHTML(b.botonTexto || 'Comprar colección') + '</a>' +
+            '<a href="#esencia" class="btn btn-linea-clara">Descubrir Aluma</a>' +
+          '</div>' +
+          '<p class="hero-confianza">Envíos a toda Colombia · Atención personalizada · Compra fácil por WhatsApp</p>' +
         '</div>';
       cont.appendChild(slide);
 
@@ -276,7 +314,11 @@
     pintarGrilla('grid-productos', ESTADO.productos);
     pintarGrilla('grid-novedades', ESTADO.productos.filter(function (p) { return p.nuevo; }).slice(0, 8));
     pintarGrilla('grid-vendidos', ESTADO.productos.filter(function (p) { return p.masVendido; }).slice(0, 8));
-    pintarGrilla('grid-ofertas', ESTADO.productos.filter(function (p) { return p.precioAnterior > p.precio; }).slice(0, 8));
+
+    var enOferta = ESTADO.productos.filter(function (p) { return precioInfo(p).activa && !estaAgotado(p); }).slice(0, 8);
+    var seccionOfertas = document.getElementById('ofertas');
+    if (seccionOfertas) seccionOfertas.style.display = enOferta.length ? '' : 'none';
+    pintarGrilla('grid-ofertas', enOferta);
   }
 
   function pintarGrilla(idContenedor, lista) {
@@ -296,12 +338,12 @@
   function tarjetaProductoHTML(p) {
     var esFav = ESTADO.favoritos.indexOf(p.id) > -1;
     var agotado = estaAgotado(p);
+    var precio = precioInfo(p);
     var etiqueta = '';
     if (agotado) {
       etiqueta = '<span class="etiqueta agotado">Agotado</span>';
-    } else if (p.precioAnterior > p.precio) {
-      var descuento = Math.round((1 - p.precio / p.precioAnterior) * 100);
-      etiqueta = '<span class="etiqueta oferta">-' + descuento + '%</span>';
+    } else if (precio.activa) {
+      etiqueta = '<span class="etiqueta oferta">-' + precio.pct + '%</span>';
     } else if (p.nuevo) {
       etiqueta = '<span class="etiqueta">Nuevo</span>';
     }
@@ -316,11 +358,11 @@
           '</div>' +
         '</div>' +
         '<div class="info-producto" onclick="abrirProducto(\'' + p.id + '\')">' +
-          '<p class="cat">' + escapeHTML(p.categoria) + '</p>' +
+          '<p class="cat">' + escapeHTML(p.categoria) + (p.material ? ' · ' + escapeHTML(p.material) : '') + '</p>' +
           '<h3>' + escapeHTML(p.nombre) + '</h3>' +
           '<div class="precios">' +
-            '<span class="precio-actual">' + formatearPrecio(p.precio) + '</span>' +
-            (p.precioAnterior > p.precio ? '<span class="precio-anterior">' + formatearPrecio(p.precioAnterior) + '</span>' : '') +
+            '<span class="precio-actual">' + formatearPrecio(precio.final) + '</span>' +
+            (precio.activa ? '<span class="precio-anterior">' + formatearPrecio(precio.base) + '</span>' : '') +
           '</div>' +
         '</div>' +
       '</div>'
@@ -359,6 +401,7 @@
     ESTADO.colorSeleccionado = p.colores[0] || '';
     ESTADO.cantidadSeleccionada = 1;
     var agotado = estaAgotado(p);
+    var precio = precioInfo(p);
 
     var galeria = (p.galeria.length ? p.galeria : [p.imagen]).map(urlImagen);
 
@@ -381,22 +424,30 @@
           '<p class="cat">' + escapeHTML(p.categoria) + ' · ' + escapeHTML(p.material) + '</p>' +
           '<h2>' + escapeHTML(p.nombre) + '</h2>' +
           '<div class="precios">' +
-            '<span class="precio-actual">' + formatearPrecio(p.precio) + '</span>' +
-            (p.precioAnterior > p.precio ? '<span class="precio-anterior">' + formatearPrecio(p.precioAnterior) + '</span>' : '') +
+            '<span class="precio-actual">' + formatearPrecio(precio.final) + '</span>' +
+            (precio.activa ? '<span class="precio-anterior">' + formatearPrecio(precio.base) + '</span><span class="badge-descuento">-' + precio.pct + '%</span>' : '') +
           '</div>' +
           '<p class="descripcion">' + escapeHTML(p.descripcion) + '</p>' +
           (p.colores.length ? '<p class="selector-titulo">Color: <span id="texto-color-elegido">' + escapeHTML(p.colores[0]) + '</span></p><div class="selector-colores">' + htmlColores + '</div>' : '') +
           (!agotado && p.stock <= 5 ? '<p style="font-size:12px; color:#a13a2f; margin-top:10px;">¡Solo quedan ' + p.stock + ' unidades!</p>' : '') +
-          '<p class="selector-titulo">Cantidad</p>' +
-          '<div class="selector-cantidad">' +
-            '<button onclick="cambiarCantidad(-1)" ' + (agotado ? 'disabled' : '') + '>-</button>' +
-            '<span id="cantidad-modal">' + (agotado ? 0 : 1) + '</span>' +
-            '<button onclick="cambiarCantidad(1)" ' + (agotado ? 'disabled' : '') + '>+</button>' +
-          '</div>' +
-          '<div class="fila-botones">' +
-            '<button class="btn btn-primario" onclick="agregarAlCarritoDesdeModal()" ' + (agotado ? 'disabled' : '') + '>' + (agotado ? 'Agotado' : 'Agregar al carrito') + '</button>' +
-            '<button class="btn btn-dorado" onclick="comprarAhora()" ' + (agotado ? 'disabled' : '') + '>Comprar</button>' +
-          '</div>' +
+          (agotado ?
+            ('<div class="aviso-agotado">' +
+              '<p class="titulo-opcion" style="margin-bottom:4px;">¿Te interesa este producto?</p>' +
+              '<p class="desc-opcion" style="margin-bottom:14px;">Está agotado por ahora, pero puedes preguntarnos si es posible encargarlo nuevamente.</p>' +
+              '<button class="btn btn-primario btn-full" onclick="abrirConsultaAgotado()">Preguntar por encargo</button>' +
+            '</div>')
+            :
+            ('<p class="selector-titulo">Cantidad</p>' +
+            '<div class="selector-cantidad">' +
+              '<button onclick="cambiarCantidad(-1)">-</button>' +
+              '<span id="cantidad-modal">1</span>' +
+              '<button onclick="cambiarCantidad(1)">+</button>' +
+            '</div>' +
+            '<div class="fila-botones">' +
+              '<button class="btn btn-primario" onclick="agregarAlCarritoDesdeModal()">Agregar al carrito</button>' +
+              '<button class="btn btn-dorado" onclick="comprarAhora()">Comprar</button>' +
+            '</div>')
+          ) +
           '<div class="fila-secundaria">' +
             '<button onclick="alternarFavorito(\'' + p.id + '\'); actualizarBotonFavModal();" id="btn-fav-modal">' + iconoCorazon() + ' Favoritos</button>' +
             '<button onclick="compartirProducto()">&#8599; Compartir</button>' +
@@ -499,6 +550,61 @@
     document.getElementById('modal-producto').classList.remove('activo');
   }
 
+  /* ---------------------------------------------------------
+     CONSULTA POR PRODUCTO AGOTADO ("Preguntar por encargo")
+     --------------------------------------------------------- */
+  function abrirConsultaAgotado() {
+    var p = ESTADO.productoActual;
+    if (!p) return;
+    document.getElementById('consulta-producto-nombre').textContent = p.nombre;
+    document.getElementById('consulta-nombre').value = '';
+    document.getElementById('consulta-contacto').value = '';
+    document.getElementById('consulta-cantidad').value = 1;
+    document.getElementById('consulta-mensaje').value = '';
+    document.getElementById('overlay-consulta').classList.add('activo');
+    document.getElementById('modal-consulta').classList.add('activo');
+  }
+
+  function cerrarConsultaAgotado() {
+    document.getElementById('overlay-consulta').classList.remove('activo');
+    document.getElementById('modal-consulta').classList.remove('activo');
+  }
+
+  function enviarConsultaAgotado() {
+    var p = ESTADO.productoActual;
+    var nombre = document.getElementById('consulta-nombre').value.trim();
+    var contacto = document.getElementById('consulta-contacto').value.trim();
+    var cantidad = document.getElementById('consulta-cantidad').value || 1;
+    var mensaje = document.getElementById('consulta-mensaje').value.trim();
+
+    if (nombre.length < 3) { mostrarToast('Escribe tu nombre'); return; }
+    if (contacto.replace(/[^0-9]/g, '').length < 7) { mostrarToast('Escribe un número de contacto válido'); return; }
+
+    var datos = { producto: p.nombre, nombre: nombre, contacto: contacto, cantidad: cantidad, mensaje: mensaje };
+    llamarApiEscritura('guardarSolicitudAgotado', datos);
+
+    var lineas = [];
+    lineas.push('Hola ALUMA');
+    lineas.push('');
+    lineas.push('Me interesa un producto que actualmente aparece agotado.');
+    lineas.push('');
+    lineas.push('Producto: ' + p.nombre);
+    lineas.push('Cantidad: ' + cantidad);
+    lineas.push('Nombre: ' + nombre);
+    lineas.push('Contacto: ' + contacto);
+    if (mensaje) lineas.push('Mensaje: ' + mensaje);
+    lineas.push('');
+    lineas.push('Me gustaría saber si existe posibilidad de encargarlo nuevamente.');
+    lineas.push('Quedo atento(a).');
+
+    var url = 'https://wa.me/' + obtenerNumeroWhatsApp() + '?text=' + encodeURIComponent(lineas.join('\n'));
+    window.open(url, '_blank');
+
+    cerrarConsultaAgotado();
+    cerrarProducto();
+    mostrarToast('Gracias, tu consulta fue enviada');
+  }
+
   function actualizarBotonFavModal() {
     var p = ESTADO.productoActual;
     var btn = document.getElementById('btn-fav-modal');
@@ -508,7 +614,7 @@
 
   function compartirProducto() {
     var p = ESTADO.productoActual;
-    var texto = p.nombre + ' - ' + formatearPrecio(p.precio) + ' | Aluma';
+    var texto = p.nombre + ' - ' + formatearPrecio(precioInfo(p).final) + ' | Aluma';
     if (navigator.share) {
       navigator.share({ title: p.nombre, text: texto, url: location.href });
     } else {
@@ -563,6 +669,8 @@
   }
 
   function agregarAlCarrito(p, color, cantidad) {
+    if (estaAgotado(p)) { mostrarToast('Este producto está agotado'); return; }
+
     var idLinea = p.id + '|' + color;
     var existente = ESTADO.carrito.filter(function (l) { return l.idLinea === idLinea; })[0];
     var cantidadActual = existente ? existente.cantidad : 0;
@@ -574,11 +682,14 @@
     }
     if (cantidadFinal <= 0) return;
 
+    var precio = precioInfo(p);
+
     if (existente) {
       existente.cantidad = cantidadFinal;
     } else {
       ESTADO.carrito.push({
-        idLinea: idLinea, id: p.id, nombre: p.nombre, precio: p.precio,
+        idLinea: idLinea, id: p.id, nombre: p.nombre,
+        precio: precio.final, precioOriginal: precio.activa ? precio.base : null, descuentoPct: precio.activa ? precio.pct : 0,
         color: color, imagen: urlImagen(p.imagen), cantidad: cantidadFinal
       });
     }
@@ -652,7 +763,8 @@
           '<div class="detalle">' +
             '<h4>' + escapeHTML(l.nombre) + '</h4>' +
             (l.color ? '<p class="variante">Color: ' + escapeHTML(l.color) + '</p>' : '') +
-            '<p class="variante">' + formatearPrecio(l.precio) + '</p>' +
+            '<p class="variante">' + formatearPrecio(l.precio) + (l.precioOriginal ? ' <span style="text-decoration:line-through; opacity:.6;">' + formatearPrecio(l.precioOriginal) + '</span>' : '') + '</p>' +
+            '<p class="variante" style="font-weight:600; color:var(--color-principal);">Subtotal: ' + formatearPrecio(l.precio * l.cantidad) + '</p>' +
             '<div class="fila-cantidad">' +
               '<button onclick="cambiarCantidadCarrito(\'' + l.idLinea + '\', -1)">-</button>' +
               '<span>' + l.cantidad + '</span>' +
@@ -820,7 +932,13 @@
     lineas.push('Pedido:');
     d.productos.forEach(function (l) {
       var variante = l.color ? ' (' + l.color + ')' : '';
-      lineas.push('- ' + l.nombre + variante + ' x' + l.cantidad + ' - ' + formatearPrecio(l.precio * l.cantidad));
+      lineas.push('- ' + l.nombre + variante + ' x' + l.cantidad);
+      if (l.precioOriginal) {
+        lineas.push('  ' + formatearPrecio(l.precio) + ' c/u (antes ' + formatearPrecio(l.precioOriginal) + ', -' + l.descuentoPct + '%)');
+      } else {
+        lineas.push('  ' + formatearPrecio(l.precio) + ' c/u');
+      }
+      lineas.push('  Subtotal: ' + formatearPrecio(l.precio * l.cantidad));
     });
     lineas.push('');
     lineas.push('Total productos: ' + formatearPrecio(d.total));
@@ -918,9 +1036,10 @@
   }
 
   var TEXTOS_POLITICA = {
-    cambios: ['Política de cambios', 'En ALUMA queremos garantizar la mejor experiencia con tus accesorios. Los cambios aplican únicamente por detalles de fabricación reportados dentro de los primeros 5 días. No realizamos cambios por daños ocasionados por uso inadecuado, golpes, caídas, piezas partidas, pérdida de piedras, manipulación del producto o desgaste natural del accesorio. Recomendamos seguir nuestras indicaciones de cuidado para conservar tus piezas en perfecto estado.'],
-    privacidad: ['Política de privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros.'],
-    terminos: ['Términos y condiciones', 'Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
+    cambios: ['Cambios', 'Aceptamos cambios dentro de los primeros 5 días después de recibido el pedido, siempre que el producto esté sin uso y en su empaque original. Escríbenos por WhatsApp para coordinar tu cambio.'],
+    privacidad: ['Políticas y privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros. Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
+    envios: ['Envíos', 'Hacemos envíos a toda Colombia a través de transportadora. El costo del envío se cotiza según tu ciudad y dirección una vez recibimos tu pedido por WhatsApp — no se calcula automáticamente en la web. En Barranquilla y Soledad también puedes elegir contra entrega.'],
+    pago: ['Métodos de pago', 'Aceptamos transferencia bancaria (te compartimos los datos por WhatsApp al confirmar tu pedido) y pago en efectivo contra entrega, disponible únicamente en Barranquilla y Soledad.'],
     faq: ['Preguntas frecuentes', '¿Cómo pago? Por transferencia o efectivo contra entrega en las ciudades disponibles.<br><br>¿Hacen envíos nacionales? Sí, a toda Colombia.<br><br>¿Cuánto tarda mi pedido? Te lo confirmamos por WhatsApp según tu ciudad.']
   };
   function abrirPolitica(clave) {
@@ -954,6 +1073,8 @@
   function manejarScroll() {
     var btn = document.getElementById('btn-subir');
     btn.classList.toggle('visible', window.scrollY > 500);
+    var header = document.querySelector('.encabezado');
+    if (header) header.classList.toggle('con-scroll', window.scrollY > 40);
   }
   function irArriba() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
