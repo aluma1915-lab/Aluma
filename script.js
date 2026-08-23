@@ -13,7 +13,7 @@
   // ⚠️ IMPORTANTE: reemplaza esto por el link real de tu Web App de Apps Script
   // (el que termina en /exec). Debes volver a implementarla después de
   // actualizar Code.gs para que entienda estas llamadas de API.
-  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxn5cvS94r4qGhpFgq-BNVQAIUPmgkoLDrZppP5EUZMruX5vDZDLnXCrH_QsydGTWjO/exec';
+  var EXEC_URL = 'https://docs.google.com/spreadsheets/d/1pKpoJNcXdVkqrVOfBlKZy6nEJ6qKRKKMnAxITAQuQoA/edit?gid=1153158595#gid=1153158595';
 
   function llamarApiLectura(accion, onExito, onError) {
     fetch(EXEC_URL + '?api=' + encodeURIComponent(accion))
