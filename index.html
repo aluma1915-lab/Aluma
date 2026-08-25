@@ -7,7 +7,7 @@
   <meta name="description" content="Aluma — accesorios y joyería de autor. Piezas delicadas y atemporales.">
   <meta property="og:title" content="Aluma | Accesorios de Lujo">
   <meta property="og:description" content="Piezas delicadas y atemporales, hechas para durar.">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 
@@ -60,6 +60,7 @@
     <li><a href="#colecciones" onclick="cerrarMenuMovil()">Colección</a></li>
     <li><a href="#novedades" onclick="cerrarMenuMovil()">Novedades</a></li>
     <li><a href="#esencia" onclick="cerrarMenuMovil()">Nosotros</a></li>
+    <li><a href="#seccion-blog" onclick="cerrarMenuMovil()">Tips</a></li>
     <li style="margin-top:30px; border-top:var(--borde); padding-top:24px;"><a href="#tienda" onclick="cerrarMenuMovil()" style="font-size:12px; color:var(--color-texto-suave);">Ver tienda completa</a></li>
     <li><a href="#ofertas" onclick="cerrarMenuMovil()" style="font-size:12px; color:var(--color-texto-suave);">Ofertas</a></li>
     <li><a href="#contacto" onclick="cerrarMenuMovil()" style="font-size:12px; color:var(--color-texto-suave);">Contacto</a></li>
@@ -218,6 +219,23 @@
     </div>
   </section>
 
+  <!-- ============ BLOG / TIPS ALUMA ============ -->
+  <section class="seccion" id="seccion-blog" style="display:none;">
+    <div class="contenedor">
+      <div class="intro-seccion fade-in">
+        <p class="subtitulo-seccion">Tips ALUMA</p>
+        <h2 class="titulo-seccion">Consejos para cuidar tus accesorios</h2>
+      </div>
+      <div class="grid-blog" id="grid-blog"></div>
+    </div>
+  </section>
+
+  <div class="overlay" id="overlay-articulo" onclick="cerrarArticulo()"></div>
+  <div class="modal-producto" id="modal-articulo" style="width:680px; padding:0;">
+    <button class="modal-cerrar" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.9); border-radius:50%; width:34px; height:34px; z-index:5;" onclick="cerrarArticulo()">&times;</button>
+    <div id="contenido-articulo"></div>
+  </div>
+
   <section class="bloque-newsletter" id="newsletter">
   <div class="contenedor">
     <h2>Únete al mundo Aluma</h2>
@@ -264,6 +282,7 @@
         <h4>Ayuda</h4>
         <ul>
           <li><a href="#" onclick="abrirPolitica('faq')">Preguntas frecuentes</a></li>
+          <li><a href="#seccion-blog">Tips ALUMA</a></li>
           <li><a href="#" onclick="abrirPolitica('envios')">Envíos</a></li>
           <li><a href="#" onclick="abrirPolitica('cambios')">Cambios</a></li>
           <li><a href="#" onclick="abrirPolitica('pago')">Métodos de pago</a></li>
@@ -478,6 +497,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>
