@@ -1,4 +1,4 @@
-/* =========================================================
+  /* =========================================================
      ALUMA — LÓGICA DE CLIENTE
      ========================================================= */
 
@@ -67,6 +67,7 @@
     banners: [],
     config: {},
     opiniones: [],
+    blog: [],
     carrito: JSON.parse(localStorage.getItem('aluma_carrito') || '[]'),
     favoritos: JSON.parse(localStorage.getItem('aluma_favoritos') || '[]'),
     categoriaActiva: 'Todos',
@@ -89,6 +90,7 @@
     observarAnimaciones();
     interceptarEnlacesInternos();
     renderSelectorEstrellas();
+    llamarApiEscritura('registrarVisita', { pagina: location.pathname, referencia: document.referrer || '' });
   };
 
   /* Evita que los enlaces tipo #tienda, #inicio, #, etc. recarguen toda la
@@ -120,6 +122,7 @@
     ESTADO.banners = datos.banners || [];
     ESTADO.config = datos.configuracion || {};
     ESTADO.opiniones = datos.opiniones || [];
+    ESTADO.blog = datos.blog || [];
 
     aplicarConfiguracion();
     renderHero();
@@ -128,6 +131,7 @@
     renderGrillas();
     renderResenas();
     renderInstagram();
+    renderBlog();
     actualizarBadges();
   }
 
@@ -1014,6 +1018,59 @@
     return partes.pop() || '';
   }
 
+  /* ---------------------------------------------------------
+     BLOG / TIPS ALUMA
+     --------------------------------------------------------- */
+  function renderBlog() {
+    var seccion = document.getElementById('seccion-blog');
+    var cont = document.getElementById('grid-blog');
+    if (!seccion || !cont) return;
+
+    if (!ESTADO.blog.length) {
+      seccion.style.display = 'none';
+      return;
+    }
+    seccion.style.display = '';
+
+    cont.innerHTML = ESTADO.blog.map(function (b) {
+      return (
+        '<div class="tarjeta-blog fade-in visible" onclick="abrirArticulo(\'' + b.id + '\')">' +
+          '<div class="imagen-wrap"><img src="' + urlImagen(b.imagen) + '" alt="' + escapeHTML(b.titulo) + '" loading="lazy"></div>' +
+          '<div class="info-blog">' +
+            (b.fecha ? '<p class="fecha-blog">' + escapeHTML(b.fecha) + '</p>' : '') +
+            '<h3>' + escapeHTML(b.titulo) + '</h3>' +
+            '<p class="resumen-blog">' + escapeHTML(b.resumen) + '</p>' +
+            '<span class="btn-texto">Leer más →</span>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function abrirArticulo(id) {
+    var b = ESTADO.blog.filter(function (x) { return x.id === id; })[0];
+    if (!b) return;
+
+    var parrafos = String(b.contenido || '').split(/\n+/).filter(Boolean)
+      .map(function (p) { return '<p>' + escapeHTML(p) + '</p>'; }).join('');
+
+    document.getElementById('contenido-articulo').innerHTML =
+      (b.imagen ? '<div class="articulo-imagen"><img src="' + urlImagen(b.imagen) + '" alt="' + escapeHTML(b.titulo) + '"></div>' : '') +
+      '<div class="articulo-texto">' +
+        (b.fecha ? '<p class="fecha-blog">' + escapeHTML(b.fecha) + '</p>' : '') +
+        '<h2>' + escapeHTML(b.titulo) + '</h2>' +
+        parrafos +
+      '</div>';
+
+    document.getElementById('overlay-articulo').classList.add('activo');
+    document.getElementById('modal-articulo').classList.add('activo');
+  }
+
+  function cerrarArticulo() {
+    document.getElementById('overlay-articulo').classList.remove('activo');
+    document.getElementById('modal-articulo').classList.remove('activo');
+  }
+
   function renderInstagram() {
     var cont = document.getElementById('grid-instagram');
     var imagenes = ESTADO.productos.slice(0, 6).map(function (p) { return urlImagen(p.imagen); });
@@ -1036,7 +1093,35 @@
   }
 
   var TEXTOS_POLITICA = {
-    cambios: ['Cambios', 'Aceptamos cambios dentro de los primeros 5 días después de recibido el pedido, siempre que el producto esté sin uso y en su empaque original. Escríbenos por WhatsApp para coordinar tu cambio.'],
+    cambios: ['Cambios', '# Política de cambios y garantía
+
+En ALUMA queremos que disfrutes tus piezas y las conserves en las mejores condiciones. Por eso, cada producto cuenta con recomendaciones de cuidado que deben seguirse para mantenerlo en buen estado.
+
+### Productos rodinados
+
+Los productos en material rodinado **no tienen garantía de color y no se realizan cambios**. Es indispensable seguir las instrucciones de cuidado proporcionadas por ALUMA.
+
+### Productos en oro laminado
+
+Los productos en oro laminado cuentan con **2 años de garantía sobre el color**. En caso de pérdida del color dentro de este período, se podrá solicitar un cambio presentando el **certificado de garantía**.
+
+### Productos en plata 925
+
+Los productos en plata 925 cuentan con **garantía de por vida sobre el color**. Para hacer efectiva la garantía, es necesario presentar el **certificado de garantía**.
+
+### La garantía no cubre
+
+La garantía aplica únicamente sobre el color y **no cubre daños ocasionados por el uso o manipulación del producto**, incluyendo:
+
+* Pérdida o caída de piedras.
+* Piezas partidas, dobladas o deformadas.
+* Golpes, rayones o daños accidentales.
+* Pérdida de partes del accesorio.
+* Daños ocasionados por el incumplimiento de las instrucciones de cuidado.
+* Desgaste natural causado por el uso.
+
+**Importante:** Para cualquier solicitud de cambio por garantía, el producto debe presentarse junto con su certificado de garantía. ALUMA se reserva el derecho de verificar que el daño corresponda a una pérdida del color cubierta por la garantía.
+'],
     privacidad: ['Políticas y privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros. Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
     envios: ['Envíos', 'Hacemos envíos a toda Colombia a través de transportadora. El costo del envío se cotiza según tu ciudad y dirección una vez recibimos tu pedido por WhatsApp — no se calcula automáticamente en la web. En Barranquilla y Soledad también puedes elegir contra entrega.'],
     pago: ['Métodos de pago', 'Aceptamos transferencia bancaria (te compartimos los datos por WhatsApp al confirmar tu pedido) y pago en efectivo contra entrega, disponible únicamente en Barranquilla y Soledad.'],
