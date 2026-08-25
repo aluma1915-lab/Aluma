@@ -1093,7 +1093,29 @@
   }
 
   var TEXTOS_POLITICA = {
-    cambios: ['Cambios', 'Aceptamos cambios dentro de los primeros 5 días después de recibido el pedido, siempre que el producto esté sin uso y en su empaque original. Escríbenos por WhatsApp para coordinar tu cambio.'],
+    cambios: ['Cambios', 'En ALUMA queremos que disfrutes tus piezas y las conserves en las mejores condiciones. Cada producto cuenta con instrucciones de cuidado que deben seguirse para mantenerlo en buen estado.
+
+PRODUCTOS RODINADOS
+Los productos en material rodinado no cuentan con garantía de color y no se realizan cambios. Es importante seguir las instrucciones de cuidado proporcionadas por ALUMA.
+
+PRODUCTOS EN ORO LAMINADO
+Los productos en oro laminado cuentan con 2 años de garantía sobre el color. En caso de pérdida del color dentro de este período, se podrá solicitar un cambio presentando el certificado de garantía.
+
+PRODUCTOS EN PLATA 925
+Los productos en plata 925 cuentan con garantía de por vida sobre el color. Para hacer efectiva la garantía, es necesario presentar el certificado de garantía.
+
+LA GARANTÍA NO CUBRE
+La garantía aplica únicamente sobre el color y no cubre daños ocasionados por el uso o manipulación del producto, incluyendo:
+
+• Pérdida o caída de piedras.
+• Piezas partidas, dobladas o deformadas.
+• Golpes, rayones o daños accidentales.
+• Pérdida de partes del accesorio.
+• Daños ocasionados por no seguir las instrucciones de cuidado.
+• Desgaste natural causado por el uso.
+
+IMPORTANTE
+Para cualquier solicitud de cambio por garantía, el producto debe presentarse junto con su certificado de garantía. ALUMA verificará que el caso corresponda a una pérdida del color cubierta por la garantía.'],
     privacidad: ['Políticas y privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros. Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
     envios: ['Envíos', 'Hacemos envíos a toda Colombia a través de transportadora. El costo del envío se cotiza según tu ciudad y dirección una vez recibimos tu pedido por WhatsApp — no se calcula automáticamente en la web. En Barranquilla y Soledad también puedes elegir contra entrega.'],
     pago: ['Métodos de pago', 'Aceptamos transferencia bancaria (te compartimos los datos por WhatsApp al confirmar tu pedido) y pago en efectivo contra entrega, disponible únicamente en Barranquilla y Soledad.'],
