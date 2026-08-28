@@ -202,17 +202,27 @@
   .tarjeta-categoria span{
     position:absolute; bottom:20px; left:20px; z-index:2; color:#fff;
     font-family: var(--fuente-titulo); font-size:22px; letter-spacing:1px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .tarjeta-categoria span small{
+    font-family: var(--fuente-texto); font-size:11px; letter-spacing:1.5px;
+    text-transform:uppercase; font-weight:300; opacity:.85;
   }
 
   /* ---------- PRODUCTOS ---------- */
   .filtros-barra{
     display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom: 40px;
   }
+  .filtros-barra.subfiltros, .filtros-barra.filtro-material{ margin-bottom:28px; margin-top:-20px; }
+  .filtros-barra.filtro-material .chip-filtro{ border-style:dashed; }
   .chip-filtro{
     padding:9px 18px; border: var(--borde); border-radius:20px; font-size:12px;
     letter-spacing:1px; text-transform:uppercase; color:var(--color-texto-suave); transition:var(--transicion);
   }
   .chip-filtro.activo, .chip-filtro:hover{ background: var(--color-principal); color:#fff; border-color:var(--color-principal); }
+  .chip-sub{ font-size:11px; padding:7px 15px; }
+  .chip-material{ font-size:11px; padding:7px 15px; color: var(--color-dorado); border-color: var(--color-dorado); }
+  .chip-material.activo, .chip-material:hover{ background: var(--color-dorado); border-color: var(--color-dorado); color:#fff; }
 
   .grid-productos{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 34px 26px;
@@ -441,8 +451,8 @@
   .info-blog h3{ font-family: var(--fuente-titulo); font-size:21px; margin-bottom:8px; color: var(--color-principal); }
   .resumen-blog{ font-size:13px; color: var(--color-texto-suave); line-height:1.7; margin-bottom:10px; }
 
-  .articulo-imagen{ width:100%; aspect-ratio: 16/9; overflow:hidden; }
-  .articulo-imagen img{ width:100%; height:100%; object-fit:cover; }
+  .articulo-imagen{ width:100%; max-height:65vh; overflow:hidden; background: var(--color-crema-2); display:flex; align-items:center; justify-content:center; }
+  .articulo-imagen img{ width:100%; max-height:65vh; object-fit:contain; }
   .articulo-texto{ padding: 34px 44px 44px; }
   .articulo-texto h2{ font-family: var(--fuente-titulo); font-size:30px; color: var(--color-principal); margin: 6px 0 20px; }
   .articulo-texto p{ font-size:14.5px; color: var(--color-texto-suave); line-height:1.9; margin-bottom:16px; }
