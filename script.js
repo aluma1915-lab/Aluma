@@ -1,4 +1,4 @@
-  /* =========================================================
+/* =========================================================
      ALUMA — LÓGICA DE CLIENTE
      ========================================================= */
 
@@ -71,6 +71,8 @@
     carrito: JSON.parse(localStorage.getItem('aluma_carrito') || '[]'),
     favoritos: JSON.parse(localStorage.getItem('aluma_favoritos') || '[]'),
     categoriaActiva: 'Todos',
+    grupoActivo: 'Todos',
+    materialActivo: 'Todos',
     indiceSlide: 0,
     productoActual: null,
     colorSeleccionado: '',
@@ -128,6 +130,8 @@
     renderHero();
     renderCategorias();
     renderFiltros();
+    renderSubfiltros();
+    renderFiltroMaterial();
     renderGrillas();
     renderResenas();
     renderInstagram();
@@ -269,30 +273,110 @@
   }
 
   /* ---------------------------------------------------------
-     CATEGORÍAS
+     CATEGORÍAS (con grupos y subcategorías)
      --------------------------------------------------------- */
+  function obtenerGruposUnicos() {
+    var vistos = {};
+    var grupos = [];
+    ESTADO.categorias.forEach(function (c) {
+      if (!vistos[c.grupo]) { vistos[c.grupo] = true; grupos.push(c.grupo); }
+    });
+    return grupos;
+  }
+
+  function obtenerGrupoDeCategoria(nombreCategoria) {
+    var c = ESTADO.categorias.filter(function (x) { return normalizarTexto(x.nombre) === normalizarTexto(nombreCategoria); })[0];
+    return c ? c.grupo : nombreCategoria;
+  }
+
+  function categoriasDeGrupo(grupo) {
+    return ESTADO.categorias.filter(function (c) { return normalizarTexto(c.grupo) === normalizarTexto(grupo); });
+  }
+
   function renderCategorias() {
     var cont = document.getElementById('grid-categorias');
     cont.innerHTML = '';
-    ESTADO.categorias.forEach(function (c) {
+    var grupos = obtenerGruposUnicos();
+    grupos.forEach(function (grupo) {
+      var categorias = categoriasDeGrupo(grupo);
+      var imagen = categorias[0] ? categorias[0].imagen : '';
       var div = document.createElement('a');
       div.href = '#tienda';
       div.className = 'tarjeta-categoria';
-      div.onclick = function () { filtrarPorCategoria(c.nombre); };
-      div.innerHTML = '<img src="' + urlImagen(c.imagen) + '" alt="' + escapeHTML(c.nombre) + '" loading="lazy"><span>' + escapeHTML(c.nombre) + '</span>';
+      div.onclick = function (e) { e.preventDefault(); seleccionarGrupo(grupo); };
+      div.innerHTML =
+        '<img src="' + urlImagen(imagen) + '" alt="' + escapeHTML(grupo) + '" loading="lazy">' +
+        '<span>' + escapeHTML(grupo) + (categorias.length > 1 ? '<small>' + categorias.length + ' subcategorías</small>' : '') + '</span>';
       cont.appendChild(div);
     });
   }
 
   function renderFiltros() {
     var cont = document.getElementById('filtros-categoria');
-    var nombres = ['Todos'].concat(ESTADO.categorias.map(function (c) { return c.nombre; }));
+    var grupos = ['Todos'].concat(obtenerGruposUnicos());
     cont.innerHTML = '';
-    nombres.forEach(function (n) {
+    grupos.forEach(function (g) {
       var chip = document.createElement('button');
-      chip.className = 'chip-filtro' + (n === ESTADO.categoriaActiva ? ' activo' : '');
-      chip.textContent = n;
-      chip.onclick = function () { filtrarPorCategoria(n); };
+      chip.className = 'chip-filtro' + (normalizarTexto(g) === normalizarTexto(ESTADO.grupoActivo) ? ' activo' : '');
+      chip.textContent = g;
+      chip.onclick = function () { seleccionarGrupo(g); };
+      cont.appendChild(chip);
+    });
+  }
+
+  function renderSubfiltros() {
+    var cont = document.getElementById('subfiltros-categoria');
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    if (ESTADO.grupoActivo === 'Todos') { cont.classList.add('oculto'); return; }
+    var categorias = categoriasDeGrupo(ESTADO.grupoActivo);
+    if (categorias.length <= 1) { cont.classList.add('oculto'); return; }
+
+    cont.classList.remove('oculto');
+    var opciones = ['Todas'].concat(categorias.map(function (c) { return c.nombre; }));
+    opciones.forEach(function (nombre) {
+      var chip = document.createElement('button');
+      var activo = (nombre === 'Todas' && ESTADO.categoriaActiva === 'Todos') || normalizarTexto(nombre) === normalizarTexto(ESTADO.categoriaActiva);
+      chip.className = 'chip-filtro chip-sub' + (activo ? ' activo' : '');
+      chip.textContent = nombre;
+      chip.onclick = function () { seleccionarSubcategoria(nombre === 'Todas' ? 'Todos' : nombre); };
+      cont.appendChild(chip);
+    });
+  }
+
+  function listaPorGrupoYCategoria() {
+    var lista = ESTADO.productos;
+    if (ESTADO.grupoActivo !== 'Todos') {
+      lista = lista.filter(function (p) { return normalizarTexto(obtenerGrupoDeCategoria(p.categoria)) === normalizarTexto(ESTADO.grupoActivo); });
+    }
+    if (ESTADO.categoriaActiva !== 'Todos') {
+      lista = lista.filter(function (p) { return normalizarTexto(p.categoria) === normalizarTexto(ESTADO.categoriaActiva); });
+    }
+    return lista;
+  }
+
+  function renderFiltroMaterial() {
+    var cont = document.getElementById('filtro-material');
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    var materiales = [];
+    var vistos = {};
+    listaPorGrupoYCategoria().forEach(function (p) {
+      var m = String(p.material || '').trim();
+      if (m && !vistos[normalizarTexto(m)]) { vistos[normalizarTexto(m)] = true; materiales.push(m); }
+    });
+
+    if (materiales.length <= 1) { cont.classList.add('oculto'); return; }
+    cont.classList.remove('oculto');
+
+    var opciones = ['Todos'].concat(materiales);
+    opciones.forEach(function (m) {
+      var chip = document.createElement('button');
+      chip.className = 'chip-filtro chip-material' + (normalizarTexto(m) === normalizarTexto(ESTADO.materialActivo) ? ' activo' : '');
+      chip.textContent = m;
+      chip.onclick = function () { seleccionarMaterial(m); };
       cont.appendChild(chip);
     });
   }
@@ -301,13 +385,53 @@
     return String(t || '').trim().toLowerCase();
   }
 
-  function filtrarPorCategoria(nombre) {
-    ESTADO.categoriaActiva = nombre;
-    renderFiltros();
-    var lista = nombre === 'Todos'
-      ? ESTADO.productos
-      : ESTADO.productos.filter(function (p) { return normalizarTexto(p.categoria) === normalizarTexto(nombre); });
+  function aplicarFiltrosProductos() {
+    var lista = listaPorGrupoYCategoria();
+    if (ESTADO.materialActivo !== 'Todos') {
+      lista = lista.filter(function (p) { return normalizarTexto(p.material) === normalizarTexto(ESTADO.materialActivo); });
+    }
     pintarGrilla('grid-productos', lista);
+  }
+
+  function seleccionarGrupo(grupo) {
+    ESTADO.grupoActivo = grupo;
+    ESTADO.categoriaActiva = 'Todos';
+    ESTADO.materialActivo = 'Todos';
+    renderFiltros();
+    renderSubfiltros();
+    renderFiltroMaterial();
+    aplicarFiltrosProductos();
+    document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function seleccionarSubcategoria(nombreCategoria) {
+    ESTADO.categoriaActiva = nombreCategoria;
+    ESTADO.materialActivo = 'Todos';
+    renderSubfiltros();
+    renderFiltroMaterial();
+    aplicarFiltrosProductos();
+  }
+
+  function seleccionarMaterial(material) {
+    ESTADO.materialActivo = material;
+    renderFiltroMaterial();
+    aplicarFiltrosProductos();
+  }
+
+  /**
+   * Compatibilidad: selecciona directamente una categoría exacta por nombre
+   * (usado por los links rápidos del footer, ej. "Anillos").
+   */
+  function filtrarPorCategoria(nombreCategoria) {
+    var grupo = obtenerGrupoDeCategoria(nombreCategoria);
+    ESTADO.grupoActivo = grupo;
+    var categorias = categoriasDeGrupo(grupo);
+    ESTADO.categoriaActiva = categorias.length > 1 ? nombreCategoria : 'Todos';
+    ESTADO.materialActivo = 'Todos';
+    renderFiltros();
+    renderSubfiltros();
+    renderFiltroMaterial();
+    aplicarFiltrosProductos();
     document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -637,7 +761,7 @@
     localStorage.setItem('aluma_favoritos', JSON.stringify(ESTADO.favoritos));
     actualizarBadges();
     renderGrillas();
-    filtrarPorCategoria(ESTADO.categoriaActiva);
+    aplicarFiltrosProductos();
     if (document.getElementById('panel-favoritos').classList.contains('activo')) renderFavoritos();
   }
 
@@ -967,13 +1091,28 @@
   /* ---------------------------------------------------------
      RESEÑAS / INSTAGRAM
      --------------------------------------------------------- */
-  function renderResenas() {
+  var LIMITE_RESENAS = 3;
+  function renderResenas(mostrarTodas) {
     var cont = document.getElementById('grid-resenas');
-    if (!ESTADO.opiniones.length) { cont.innerHTML = ''; return; }
-    cont.innerHTML = ESTADO.opiniones.map(function (o) {
+    var pie = document.getElementById('pie-resenas');
+    if (!ESTADO.opiniones.length) { cont.innerHTML = ''; if (pie) pie.innerHTML = ''; return; }
+
+    var lista = mostrarTodas ? ESTADO.opiniones : ESTADO.opiniones.slice(0, LIMITE_RESENAS);
+
+    cont.innerHTML = lista.map(function (o) {
       var estrellas = '&#9733;'.repeat(Math.round(o.calificacion)) + '&#9734;'.repeat(5 - Math.round(o.calificacion));
       return '<div class="tarjeta-resena fade-in visible"><div class="estrellas">' + estrellas + '</div><p>"' + escapeHTML(o.texto) + '"</p><h5>' + escapeHTML(o.nombre) + '</h5></div>';
     }).join('');
+
+    if (pie) {
+      if (ESTADO.opiniones.length > LIMITE_RESENAS) {
+        pie.innerHTML = mostrarTodas
+          ? '<button class="btn-texto" onclick="renderResenas(false); document.getElementById(\'grid-resenas\').scrollIntoView({behavior:\'smooth\'});">Ver menos</button>'
+          : '<button class="btn-texto" onclick="renderResenas(true)">Ver todas las reseñas (' + ESTADO.opiniones.length + ')</button>';
+      } else {
+        pie.innerHTML = '';
+      }
+    }
   }
 
   ESTADO.calificacionSeleccionada = 5;
@@ -1021,9 +1160,11 @@
   /* ---------------------------------------------------------
      BLOG / TIPS ALUMA
      --------------------------------------------------------- */
-  function renderBlog() {
+  var LIMITE_BLOG = 3;
+  function renderBlog(mostrarTodos) {
     var seccion = document.getElementById('seccion-blog');
     var cont = document.getElementById('grid-blog');
+    var pie = document.getElementById('pie-blog');
     if (!seccion || !cont) return;
 
     if (!ESTADO.blog.length) {
@@ -1032,7 +1173,9 @@
     }
     seccion.style.display = '';
 
-    cont.innerHTML = ESTADO.blog.map(function (b) {
+    var lista = mostrarTodos ? ESTADO.blog : ESTADO.blog.slice(0, LIMITE_BLOG);
+
+    cont.innerHTML = lista.map(function (b) {
       return (
         '<div class="tarjeta-blog fade-in visible" onclick="abrirArticulo(\'' + b.id + '\')">' +
           '<div class="imagen-wrap"><img src="' + urlImagen(b.imagen) + '" alt="' + escapeHTML(b.titulo) + '" loading="lazy"></div>' +
@@ -1045,6 +1188,16 @@
         '</div>'
       );
     }).join('');
+
+    if (pie) {
+      if (ESTADO.blog.length > LIMITE_BLOG) {
+        pie.innerHTML = mostrarTodos
+          ? '<button class="btn-texto" onclick="renderBlog(false); document.getElementById(\'seccion-blog\').scrollIntoView({behavior:\'smooth\'});">Ver menos</button>'
+          : '<button class="btn-texto" onclick="renderBlog(true)">Ver todos los tips (' + ESTADO.blog.length + ')</button>';
+      } else {
+        pie.innerHTML = '';
+      }
+    }
   }
 
   function abrirArticulo(id) {
@@ -1093,7 +1246,20 @@
   }
 
   var TEXTOS_POLITICA = {
-    cambios: ['Cambios', 'Aceptamos cambios dentro de los primeros 5 días después de recibido el pedido, siempre que el producto esté sin uso y en su empaque original. Escríbenos por WhatsApp para coordinar tu cambio.'],
+    cambios: ['Política de cambios y garantía', '<p>En ALUMA queremos que disfrutes tus piezas y las conserves en las mejores condiciones. Cada producto cuenta con instrucciones de cuidado que deben seguirse para mantenerlo en buen estado.</p>' +
+      '<p><strong>PRODUCTOS RODINADOS</strong><br>Los productos en material rodinado no cuentan con garantía de color y no se realizan cambios. Es importante seguir las instrucciones de cuidado proporcionadas por ALUMA.</p>' +
+      '<p><strong>PRODUCTOS EN ORO LAMINADO</strong><br>Los productos en oro laminado cuentan con 2 años de garantía sobre el color. En caso de pérdida del color dentro de este período, se podrá solicitar un cambio presentando el certificado de garantía.</p>' +
+      '<p><strong>PRODUCTOS EN PLATA 925</strong><br>Los productos en plata 925 cuentan con garantía de por vida sobre el color. Para hacer efectiva la garantía, es necesario presentar el certificado de garantía.</p>' +
+      '<p><strong>LA GARANTÍA NO CUBRE</strong><br>La garantía aplica únicamente sobre el color y no cubre daños ocasionados por el uso o manipulación del producto, incluyendo:</p>' +
+      '<ul style="padding-left:18px; margin-bottom:16px;">' +
+        '<li>Pérdida o caída de piedras.</li>' +
+        '<li>Piezas partidas, dobladas o deformadas.</li>' +
+        '<li>Golpes, rayones o daños accidentales.</li>' +
+        '<li>Pérdida de partes del accesorio.</li>' +
+        '<li>Daños ocasionados por no seguir las instrucciones de cuidado.</li>' +
+        '<li>Desgaste natural causado por el uso.</li>' +
+      '</ul>' +
+      '<p><strong>IMPORTANTE</strong><br>Para cualquier solicitud de cambio por garantía, el producto debe presentarse junto con su certificado de garantía. ALUMA verificará que el caso corresponda a una pérdida del color cubierta por la garantía.</p>'],
     privacidad: ['Políticas y privacidad', 'Tus datos personales se usan únicamente para procesar tu pedido y contactarte. No compartimos tu información con terceros. Al realizar una compra en Aluma aceptas nuestras condiciones de venta, tiempos de entrega estimados y política de cambios.'],
     envios: ['Envíos', 'Hacemos envíos a toda Colombia a través de transportadora. El costo del envío se cotiza según tu ciudad y dirección una vez recibimos tu pedido por WhatsApp — no se calcula automáticamente en la web. En Barranquilla y Soledad también puedes elegir contra entrega.'],
     pago: ['Métodos de pago', 'Aceptamos transferencia bancaria (te compartimos los datos por WhatsApp al confirmar tu pedido) y pago en efectivo contra entrega, disponible únicamente en Barranquilla y Soledad.'],
