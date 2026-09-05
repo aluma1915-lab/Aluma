@@ -137,6 +137,24 @@
     renderInstagram();
     renderBlog();
     actualizarBadges();
+    abrirProductoDesdeURL();
+  }
+
+  /**
+   * Si el link con el que se abrió la tienda trae ?producto=ID (generado por
+   * el botón "Compartir"), abre automáticamente la ficha de ese producto.
+   */
+  function abrirProductoDesdeURL() {
+    var params = new URLSearchParams(location.search);
+    var id = params.get('producto');
+    if (!id) return;
+
+    var existe = ESTADO.productos.some(function (p) { return p.id === id; });
+    if (existe) {
+      abrirProducto(id);
+    } else {
+      mostrarToast('Ese producto ya no está disponible');
+    }
   }
 
   function aplicarConfiguracion() {
@@ -740,13 +758,22 @@
     if (btn) btn.innerHTML = iconoCorazon() + ' Favoritos' + (esFav ? ' (agregado)' : '');
   }
 
+  function generarEnlaceProducto(id) {
+    var url = new URL(location.href);
+    url.search = '';
+    url.hash = '';
+    url.searchParams.set('producto', id);
+    return url.toString();
+  }
+
   function compartirProducto() {
     var p = ESTADO.productoActual;
     var texto = p.nombre + ' - ' + formatearPrecio(precioInfo(p).final) + ' | Aluma';
+    var enlace = generarEnlaceProducto(p.id);
     if (navigator.share) {
-      navigator.share({ title: p.nombre, text: texto, url: location.href });
+      navigator.share({ title: p.nombre, text: texto, url: enlace });
     } else {
-      navigator.clipboard.writeText(texto + ' ' + location.href);
+      navigator.clipboard.writeText(texto + ' ' + enlace);
       mostrarToast('Enlace copiado');
     }
   }
