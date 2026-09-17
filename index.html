@@ -7,7 +7,7 @@
   <meta name="description" content="Aluma — accesorios y joyería de autor. Piezas delicadas y atemporales.">
   <meta property="og:title" content="Aluma | Accesorios de Lujo">
   <meta property="og:description" content="Piezas delicadas y atemporales, hechas para durar.">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
 
@@ -20,10 +20,10 @@
     <a href="#inicio" class="logo">ALUMA</a>
 
     <nav class="menu-links">
-      <a href="#inicio">Inicio</a>
-      <a href="#colecciones">Colección</a>
-      <a href="#novedades">Novedades</a>
-      <a href="#esencia">Nosotros</a>
+      <a href="#inicio" data-nav="inicio">Inicio</a>
+      <a href="#coleccion" data-nav="coleccion">Colección</a>
+      <a href="#novedades" data-nav="novedades">Novedades</a>
+      <a href="#nosotros" data-nav="nosotros">Nosotros</a>
     </nav>
 
     <div class="iconos-nav">
@@ -56,10 +56,10 @@
 <div class="menu-movil" id="menu-movil">
   <button class="cerrar-panel" style="float:right;" onclick="cerrarMenuMovil()">&times;</button>
   <ul style="margin-top:50px;">
-    <li><a href="#inicio" onclick="cerrarMenuMovil()">Inicio</a></li>
-    <li><a href="#colecciones" onclick="cerrarMenuMovil()">Colección</a></li>
-    <li><a href="#novedades" onclick="cerrarMenuMovil()">Novedades</a></li>
-    <li><a href="#esencia" onclick="cerrarMenuMovil()">Nosotros</a></li>
+    <li><a href="#inicio" data-nav="inicio" onclick="cerrarMenuMovil()">Inicio</a></li>
+    <li><a href="#coleccion" data-nav="coleccion" onclick="cerrarMenuMovil()">Colección</a></li>
+    <li><a href="#novedades" data-nav="novedades" onclick="cerrarMenuMovil()">Novedades</a></li>
+    <li><a href="#nosotros" data-nav="nosotros" onclick="cerrarMenuMovil()">Nosotros</a></li>
     <li><a href="#seccion-blog" onclick="cerrarMenuMovil()">Tips</a></li>
     <li style="margin-top:30px; border-top:var(--borde); padding-top:24px;"><a href="#tienda" onclick="cerrarMenuMovil()" style="font-size:12px; color:var(--color-texto-suave);">Ver tienda completa</a></li>
     <li><a href="#ofertas" onclick="cerrarMenuMovil()" style="font-size:12px; color:var(--color-texto-suave);">Ofertas</a></li>
@@ -69,13 +69,21 @@
 
 
   <!-- ============ HERO ============ -->
-  <section class="hero" id="inicio">
+  <!-- Encabezado de página interna -->
+  <section class="encabezado-pagina oculto" id="encabezado-pagina">
+    <div class="contenedor">
+      <h1 id="titulo-pagina"></h1>
+      <p id="subtitulo-pagina"></p>
+    </div>
+  </section>
+
+  <section class="hero" id="inicio" data-pagina="inicio">
     <div id="hero-slides"></div>
     <div class="hero-dots" id="hero-dots"></div>
   </section>
 
   <!-- ============ CATEGORIAS ============ -->
-  <section class="seccion" id="colecciones">
+  <section class="seccion" id="colecciones" data-pagina="inicio coleccion">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Explora</p>
@@ -86,21 +94,32 @@
   </section>
 
   <!-- ============ SELECCIÓN ALUMA / DESTACADOS ============ -->
-  <section class="seccion" id="tienda">
+  <section class="seccion" id="tienda" data-pagina="coleccion">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Selección ALUMA</p>
         <h2 class="titulo-seccion">Piezas elegidas para acompañarte todos los días</h2>
       </div>
-      <div class="filtros-barra" id="filtros-categoria"></div>
-      <div class="filtros-barra subfiltros oculto" id="subfiltros-categoria"></div>
-      <div class="filtros-barra filtro-material oculto" id="filtro-material"></div>
+      <div class="bloque-filtros">
+        <div class="fila-filtro">
+          <span class="etiqueta-filtro">Categoría</span>
+          <div class="filtros-barra" id="filtros-categoria"></div>
+        </div>
+        <div class="fila-filtro oculto" id="fila-subfiltros">
+          <span class="etiqueta-filtro">Tipo</span>
+          <div class="filtros-barra subfiltros" id="subfiltros-categoria"></div>
+        </div>
+        <div class="fila-filtro oculto" id="fila-material">
+          <span class="etiqueta-filtro">Material</span>
+          <div class="filtros-barra filtro-material" id="filtro-material"></div>
+        </div>
+      </div>
       <div class="grid-productos" id="grid-productos"></div>
     </div>
   </section>
 
   <!-- ============ NOVEDADES / RECIÉN LLEGADAS ============ -->
-  <section class="seccion" id="novedades" style="background:var(--color-crema-2);">
+  <section class="seccion" id="novedades" data-pagina="inicio novedades" style="background:var(--color-crema-2);">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Nueva colección</p>
@@ -115,7 +134,7 @@
   </section>
 
   <!-- ============ MAS VENDIDOS ============ -->
-  <section class="seccion">
+  <section class="seccion" data-pagina="inicio">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Favoritos de nuestras clientas</p>
@@ -126,7 +145,7 @@
   </section>
 
   <!-- ============ OFERTAS / ÚLTIMAS OPORTUNIDADES ============ -->
-  <section class="seccion" id="ofertas" style="background:var(--color-crema-2);">
+  <section class="seccion" id="ofertas" data-pagina="inicio coleccion" style="background:var(--color-crema-2);">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Por tiempo limitado</p>
@@ -138,7 +157,7 @@
   </section>
 
   <!-- ============ NUESTRA ESENCIA ============ -->
-  <section class="seccion-esencia" id="esencia">
+  <section class="seccion-esencia" id="esencia" data-pagina="inicio nosotros">
     <div class="esencia-imagen" id="esencia-imagen"></div>
     <div class="esencia-texto">
       <p class="subtitulo-seccion">Nuestra historia</p>
@@ -149,7 +168,7 @@
   </section>
 
   <!-- ============ CÓMO COMPRAR ============ -->
-  <section class="seccion" id="como-comprar">
+  <section class="seccion" id="como-comprar" data-pagina="inicio nosotros">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Simple y sin complicaciones</p>
@@ -177,7 +196,7 @@
   </section>
 
   <!-- ============ FRANJA DE CONFIANZA ============ -->
-  <section class="franja-confianza">
+  <section class="franja-confianza" data-pagina="inicio nosotros">
     <div class="contenedor grid-confianza">
       <div>Materiales seleccionados</div>
       <div>Envíos a toda Colombia</div>
@@ -187,7 +206,7 @@
   </section>
 
   <!-- ============ RESEÑAS ============ -->
-  <section class="seccion">
+  <section class="seccion" id="seccion-resenas" data-pagina="inicio nosotros">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Lo que dicen de nosotros</p>
@@ -212,7 +231,7 @@
   </section>
 
   <!-- ============ INSTAGRAM ============ -->
-  <section class="seccion" style="background:var(--color-crema-2); padding-bottom:70px;">
+  <section class="seccion" data-pagina="inicio nosotros" style="background:var(--color-crema-2); padding-bottom:70px;">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Síguenos</p>
@@ -223,7 +242,7 @@
   </section>
 
   <!-- ============ BLOG / TIPS ALUMA ============ -->
-  <section class="seccion" id="seccion-blog" style="display:none;">
+  <section class="seccion" id="seccion-blog" data-pagina="inicio nosotros" style="display:none;">
     <div class="contenedor">
       <div class="intro-seccion fade-in">
         <p class="subtitulo-seccion">Tips ALUMA</p>
@@ -501,6 +520,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>
