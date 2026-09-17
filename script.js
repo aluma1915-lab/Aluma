@@ -71,6 +71,7 @@
     carrito: JSON.parse(localStorage.getItem('aluma_carrito') || '[]'),
     favoritos: JSON.parse(localStorage.getItem('aluma_favoritos') || '[]'),
     categoriaActiva: 'Todos',
+    paginaActual: 'inicio',
     grupoActivo: 'Todos',
     materialActivo: 'Todos',
     indiceSlide: 0,
@@ -103,12 +104,28 @@
       var link = e.target.closest('a[href^="#"]');
       if (!link) return;
       e.preventDefault();
-      var id = link.getAttribute('href').slice(1);
-      if (id) {
-        var destino = document.getElementById(id);
-        if (destino) destino.scrollIntoView({ behavior: 'smooth' });
-      }
       cerrarMenuMovil();
+
+      var id = link.getAttribute('href').slice(1);
+      if (!id) return;
+
+      // Si es una de las páginas principales, navegamos a ella.
+      if (PAGINAS[id]) { irAPagina(id); return; }
+
+      var destino = document.getElementById(id);
+      if (!destino) return;
+
+      // Si la sección pertenece a otra página, primero cambiamos de página.
+      var paginas = (destino.getAttribute('data-pagina') || '').split(/\s+/);
+      if (paginas[0] && paginas.indexOf(ESTADO.paginaActual) === -1) {
+        irAPagina(paginas[0], true);
+      }
+      setTimeout(function () { destino.scrollIntoView({ behavior: 'smooth' }); }, 60);
+    });
+
+    window.addEventListener('hashchange', function () {
+      var p = paginaDesdeHash();
+      if (p !== ESTADO.paginaActual) irAPagina(p);
     });
   }
 
@@ -137,6 +154,7 @@
     renderInstagram();
     renderBlog();
     actualizarBadges();
+    irAPagina(paginaDesdeHash(), true);
     abrirProductoDesdeURL();
   }
 
@@ -291,8 +309,63 @@
   }
 
   /* ---------------------------------------------------------
-     CATEGORÍAS (con grupos y subcategorías)
+     NAVEGACIÓN POR PÁGINAS
+     Cada sección declara en qué páginas aparece con data-pagina.
      --------------------------------------------------------- */
+  var PAGINAS = {
+    inicio:    { titulo: '', subtitulo: '' },
+    coleccion: { titulo: 'Nuestra colección', subtitulo: 'Explora todas nuestras piezas por categoría, tipo y material.' },
+    novedades: { titulo: 'Novedades', subtitulo: 'Las piezas que acaban de llegar a ALUMA.' },
+    nosotros:  { titulo: 'Sobre ALUMA', subtitulo: 'Nuestra esencia, cómo comprar y lo que dicen nuestras clientas.' }
+  };
+
+  function irAPagina(nombre, sinScroll) {
+    if (!PAGINAS[nombre]) nombre = 'inicio';
+    ESTADO.paginaActual = nombre;
+
+    document.querySelectorAll('section[data-pagina]').forEach(function (sec) {
+      var paginas = (sec.getAttribute('data-pagina') || '').split(/\s+/);
+      var visible = paginas.indexOf(nombre) > -1;
+
+      // La sección de tips solo se muestra si además hay artículos publicados
+      if (sec.id === 'seccion-blog') {
+        sec.style.display = (visible && ESTADO.blog.length) ? '' : 'none';
+        return;
+      }
+      // La sección de ofertas solo si hay ofertas activas
+      if (sec.id === 'ofertas') {
+        var hayOfertas = ESTADO.productos.some(function (p) { return precioInfo(p).activa && !estaAgotado(p); });
+        sec.style.display = (visible && hayOfertas) ? '' : 'none';
+        return;
+      }
+      sec.style.display = visible ? '' : 'none';
+    });
+
+    // Encabezado con el título de la página (no se muestra en Inicio)
+    var encabezado = document.getElementById('encabezado-pagina');
+    if (nombre === 'inicio') {
+      encabezado.classList.add('oculto');
+    } else {
+      encabezado.classList.remove('oculto');
+      document.getElementById('titulo-pagina').textContent = PAGINAS[nombre].titulo;
+      document.getElementById('subtitulo-pagina').textContent = PAGINAS[nombre].subtitulo;
+    }
+
+    // Marcar el link activo del menú
+    document.querySelectorAll('[data-nav]').forEach(function (a) {
+      a.classList.toggle('activo', a.getAttribute('data-nav') === nombre);
+    });
+
+    if (location.hash !== '#' + nombre) history.replaceState(null, '', '#' + nombre);
+    if (!sinScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function paginaDesdeHash() {
+    var h = (location.hash || '').replace('#', '');
+    return PAGINAS[h] ? h : 'inicio';
+  }
+
+
   function obtenerGruposUnicos() {
     var vistos = {};
     var grupos = [];
@@ -347,11 +420,12 @@
     if (!cont) return;
     cont.innerHTML = '';
 
-    if (ESTADO.grupoActivo === 'Todos') { cont.classList.add('oculto'); return; }
+    var fila = document.getElementById('fila-subfiltros');
+    if (ESTADO.grupoActivo === 'Todos') { if (fila) fila.classList.add('oculto'); return; }
     var categorias = categoriasDeGrupo(ESTADO.grupoActivo);
-    if (categorias.length <= 1) { cont.classList.add('oculto'); return; }
+    if (categorias.length <= 1) { if (fila) fila.classList.add('oculto'); return; }
 
-    cont.classList.remove('oculto');
+    if (fila) fila.classList.remove('oculto');
     var opciones = ['Todas'].concat(categorias.map(function (c) { return c.nombre; }));
     opciones.forEach(function (nombre) {
       var chip = document.createElement('button');
@@ -386,8 +460,9 @@
       if (m && !vistos[normalizarTexto(m)]) { vistos[normalizarTexto(m)] = true; materiales.push(m); }
     });
 
-    if (materiales.length <= 1) { cont.classList.add('oculto'); return; }
-    cont.classList.remove('oculto');
+    var filaMat = document.getElementById('fila-material');
+    if (materiales.length <= 1) { if (filaMat) filaMat.classList.add('oculto'); return; }
+    if (filaMat) filaMat.classList.remove('oculto');
 
     var opciones = ['Todos'].concat(materiales);
     opciones.forEach(function (m) {
@@ -408,6 +483,10 @@
     if (ESTADO.materialActivo !== 'Todos') {
       lista = lista.filter(function (p) { return normalizarTexto(p.material) === normalizarTexto(ESTADO.materialActivo); });
     }
+    // Los productos agotados siempre se muestran de últimos, sin desaparecer.
+    lista = lista.slice().sort(function (a, b) {
+      return (estaAgotado(a) ? 1 : 0) - (estaAgotado(b) ? 1 : 0);
+    });
     pintarGrilla('grid-productos', lista);
   }
 
@@ -419,6 +498,7 @@
     renderSubfiltros();
     renderFiltroMaterial();
     aplicarFiltrosProductos();
+    irAPagina('coleccion', true);
     document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -450,6 +530,7 @@
     renderSubfiltros();
     renderFiltroMaterial();
     aplicarFiltrosProductos();
+    irAPagina('coleccion', true);
     document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -462,8 +543,6 @@
     pintarGrilla('grid-vendidos', ESTADO.productos.filter(function (p) { return p.masVendido; }).slice(0, 8));
 
     var enOferta = ESTADO.productos.filter(function (p) { return precioInfo(p).activa && !estaAgotado(p); }).slice(0, 8);
-    var seccionOfertas = document.getElementById('ofertas');
-    if (seccionOfertas) seccionOfertas.style.display = enOferta.length ? '' : 'none';
     pintarGrilla('grid-ofertas', enOferta);
   }
 
@@ -523,12 +602,15 @@
     clearTimeout(temporizadorBusqueda);
     temporizadorBusqueda = setTimeout(function () {
       var q = texto.trim().toLowerCase();
-      if (!q) { pintarGrilla('grid-productos', ESTADO.productos); return; }
+      irAPagina('coleccion', true);
+      if (!q) { aplicarFiltrosProductos(); return; }
       var resultado = ESTADO.productos.filter(function (p) {
         return (p.nombre + ' ' + p.categoria + ' ' + p.material).toLowerCase().indexOf(q) > -1;
+      }).sort(function (a, b) {
+        return (estaAgotado(a) ? 1 : 0) - (estaAgotado(b) ? 1 : 0);
       });
-      document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
       pintarGrilla('grid-productos', resultado);
+      document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
     }, 250);
   }
 
@@ -1198,7 +1280,6 @@
       seccion.style.display = 'none';
       return;
     }
-    seccion.style.display = '';
 
     var lista = mostrarTodos ? ESTADO.blog : ESTADO.blog.slice(0, LIMITE_BLOG);
 
