@@ -211,9 +211,19 @@
 
   /* ---------- PRODUCTOS ---------- */
   .filtros-barra{
-    display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom: 40px;
+    display:flex; gap:10px; justify-content:flex-start; margin-bottom: 18px;
+    overflow-x:auto; padding-bottom:6px; scrollbar-width:none;
   }
-  .filtros-barra.subfiltros, .filtros-barra.filtro-material{ margin-bottom:28px; margin-top:-20px; }
+  .filtros-barra::-webkit-scrollbar{ display:none; }
+  .filtros-barra .chip-filtro{ flex:0 0 auto; }
+  .fila-filtro{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .fila-filtro .etiqueta-filtro{
+    flex:0 0 auto; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color: var(--color-texto-suave); min-width:78px; text-align:right;
+  }
+  .fila-filtro .filtros-barra{ margin-bottom:0; }
+  .bloque-filtros{ margin-bottom:40px; border-bottom: var(--borde); padding-bottom:22px; }
+  .filtros-barra.subfiltros, .filtros-barra.filtro-material{ margin-bottom:0; margin-top:0; }
   .filtros-barra.filtro-material .chip-filtro{ border-style:dashed; }
   .chip-filtro{
     padding:9px 18px; border: var(--borde); border-radius:20px; font-size:12px;
@@ -440,6 +450,26 @@
   .grid-instagram img{ width:100%; height:100%; object-fit:cover; transition:var(--transicion); }
   .grid-instagram a:hover img{ transform: scale(1.1); opacity:.85; }
 
+  /* ---------- ENCABEZADO DE PÁGINA INTERNA ---------- */
+  .encabezado-pagina{
+    background: var(--color-crema-2); padding: 64px 0 56px; text-align:center;
+    border-bottom: var(--borde);
+  }
+  .encabezado-pagina h1{
+    font-family: var(--fuente-titulo); font-size: clamp(30px, 4.2vw, 46px);
+    font-weight:500; color: var(--color-principal); letter-spacing:0.5px; margin-bottom:10px;
+  }
+  .encabezado-pagina p{
+    font-size:14px; color: var(--color-texto-suave); max-width:480px; margin:0 auto; line-height:1.7;
+  }
+  .menu-links a.activo{ color: var(--color-principal); font-weight:500; }
+  .menu-links a.activo::after{ width:100%; }
+  .menu-movil a.activo{ color: var(--color-principal); font-weight:600; }
+
+  @media (max-width: 560px){
+    .encabezado-pagina{ padding: 40px 0 34px; }
+  }
+
   /* ---------- BLOG / TIPS ---------- */
   .grid-blog{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:30px; }
   .tarjeta-blog{ cursor:pointer; }
@@ -561,8 +591,11 @@
       padding-bottom:10px; -webkit-overflow-scrolling:touch;
     }
     .tarjeta-resena{ min-width:78%; scroll-snap-align:start; }
-    .filtros-barra{ gap:8px; margin-bottom:28px; }
+    .filtros-barra{ gap:8px; margin-bottom:12px; }
     .chip-filtro{ padding:7px 14px; }
+    .fila-filtro{ flex-direction:column; align-items:stretch; gap:6px; margin-bottom:12px; }
+    .fila-filtro .etiqueta-filtro{ text-align:left; min-width:0; }
+    .bloque-filtros{ margin-bottom:28px; padding-bottom:16px; }
     .grid-resenas{ gap:16px; }
     .tarjeta-resena{ padding:20px; }
     .bloque-newsletter{ padding: 50px 24px; }
